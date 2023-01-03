@@ -42,11 +42,13 @@ let comment = '{'[^'{']*'}'
 
 rule token = parse
     | comment                     { token lexbuf }
+    | "//"    { let _ = Lexing.new_line in token lexbuf}
     | ivalue as s                 { INT (int_of_string s) }
     | alphau(alphau|digit)* as s  { find_token s }
     | '.'     { DOT }
     | ','     { COMA }
     | ';'     { SEP }
+    | ";\n"   { SEPL }
     | ':'     { COLON }
     | '('     { LPAR }
     | ')'     { RPAR }

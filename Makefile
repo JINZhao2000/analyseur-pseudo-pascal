@@ -21,3 +21,9 @@ parse:
 clean:
 	@dune clean
 
+conflict: build
+	@menhir --explain --unused-tokens ./lib/parser.mly
+	@ocamlyacc -v ./lib/parser.mly
+	@rm -f ./lib/parser.mli
+	@rm -f ./lib/parser.ml
+

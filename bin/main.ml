@@ -28,7 +28,9 @@ let _ =
         let f = open_in Sys.argv.(i) in
         try
           let lexbuf= Lexing.from_channel f in
-          let _ = Parser.program Lexer.token lexbuf in ()
+          let _ = Parsing.set_trace true in
+          let p = Parser.program Lexer.token lexbuf in
+          Printf.fprintf stdout "%s\n" (Debug.str_program p)
         with
           | Parsing.Parse_error -> Printf.fprintf stderr "Parse error\n"; close_in f
       done

@@ -2,3 +2,5 @@ _build
 KO
 OK
 *.p
+lib/parser.conflicts
+lib/parser.output

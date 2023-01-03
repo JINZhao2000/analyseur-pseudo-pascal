@@ -1,3 +1,5 @@
+open Ast
+
 let print_code flu = 
   match flu with 
   | Parser.PROG -> Printf.fprintf stdout "%s" "\nprogram\n"
@@ -14,7 +16,8 @@ let print_code flu =
 
   | Parser.LPAR -> Printf.fprintf stdout "%s" "("
   | Parser.RPAR -> Printf.fprintf stdout "%s" ")"
-  | Parser.SEP -> Printf.fprintf stdout "%s" ";\n"
+  | Parser.SEP -> Printf.fprintf stdout "%s" ";"
+  | Parser.SEPL -> Printf.fprintf stdout "%s" ";\n"
   | Parser.COLON -> Printf.fprintf stdout "%s" ":"
   | Parser.COMA -> Printf.fprintf stdout "%s " ","
   | Parser.LCOCH -> Printf.fprintf stdout "%s" "["
@@ -58,14 +61,15 @@ let print_token flu =
   | Parser.PROC -> Printf.fprintf stdout "%s" "PROC "
   | Parser.VAR -> Printf.fprintf stdout "%s " "VAR "
 
-  | Parser.INTT -> Printf.fprintf stdout "%s" "INT "
-  | Parser.BOOLT -> Printf.fprintf stdout "%s" "BOOL "
+  | Parser.INTT -> Printf.fprintf stdout "%s" "INTT "
+  | Parser.BOOLT -> Printf.fprintf stdout "%s" "BOOLT "
   | Parser.ARR -> Printf.fprintf stdout "%s" "ARR"
   | Parser.NEW -> Printf.fprintf stdout "%s" "NEW "
 
   | Parser.LPAR -> Printf.fprintf stdout "%s" "LPAR "
   | Parser.RPAR -> Printf.fprintf stdout "%s" "RPAR "
-  | Parser.SEP -> Printf.fprintf stdout "%s" "SEP\n"
+  | Parser.SEP -> Printf.fprintf stdout "%s" "SEP"
+  | Parser.SEPL -> Printf.fprintf stdout "%s" "SEPL\n"
   | Parser.COLON -> Printf.fprintf stdout "%s" "COLON "
   | Parser.COMA -> Printf.fprintf stdout "%s " "COMA "
   | Parser.LCOCH -> Printf.fprintf stdout "%s" "LCOCH "
@@ -123,3 +127,57 @@ let print_t lbuf =
     with
       | Failure _ -> Printf.fprintf stderr "Unknown token after token %d\n" (!r) ; exit 0
   done
+
+
+let rec str_t t = match t with
+| INTT -> " integer "
+| BOOLT -> " boolean "
+| ARR t -> " array of" ^ str_t t
+
+let str_var v = match v with 
+| VAR1 vl -> List.fold_left (fun acc (id, t) -> acc ^ id ^ ":" ^ str_t t ^ ";") "var " vl
+| VAR2 (idl, t) -> List.fold_left (fun acc x -> acc ^  x ^ ",") "var " idl ^ " : " ^ str_t t
+
+let str_var2 v = match v with 
+| VAR1 vl -> List.fold_left (fun acc (id, t) -> acc ^  id ^ ":" ^ str_t t ^ ";") "" vl
+| VAR2 (idl, t) -> List.fold_left (fun acc x -> acc ^ x ^ ",") "" idl ^ " : " ^ str_t t
+
+let rec str_e e = match e with
+| INT i -> string_of_int i ^ " "
+| BOOL b -> string_of_bool b ^ " "
+| NEG v -> " -" ^ str_e v
+| PLUS (v1, v2) -> str_e v1 ^ " + " ^ str_e v2
+| MINUS (v1, v2) -> str_e v1 ^ " - " ^ str_e v2
+| TIMES (v1, v2) -> str_e v1 ^ " * " ^ str_e v2
+| DIV (v1, v2) ->str_e v1 ^ " / " ^ str_e v2
+| EQ (v1, v2) -> str_e v1 ^ " = " ^ str_e v2
+| NE (v1, v2) -> str_e v1 ^ " <> " ^ str_e v2
+| GE(v1, v2) -> str_e v1 ^ " >= " ^ str_e v2
+| LE (v1, v2) -> str_e v1 ^ " <= " ^ str_e v2
+| GT (v1, v2) -> str_e v1 ^ " > " ^ str_e v2
+| LT (v1, v2) -> str_e v1 ^ " < " ^ str_e v2
+| Tbl (v1, v2) -> str_e v1 ^ "[" ^ str_e v2 ^ "]"
+| CTbl (t, v) -> "new array of" ^ str_t t ^ "[" ^ str_e v ^ "]"
+| _ -> "not implemented"
+
+let str_instr instr = match instr with 
+| AFF (id, e) -> id ^ " := " ^ str_e e
+| _ -> "not implemented"
+
+let str_bloc b = match b with BLOC bl ->
+  "begin\n" ^ (List.fold_left (fun acc x -> acc ^ str_instr x ^ "\n") "" bl) ^ "\nend"
+
+let str_defps defps = match defps with
+| DEFV v -> str_var v
+| DEFF (FUNC (id, env, t, defv, bloc)) -> 
+  let s = "function " ^ id ^ "(" in
+  let s = match env with | None -> s
+  | Some (e) -> s ^ str_var2 e in 
+  let s = s ^ "):" ^str_t t in
+  let s = match defv with | None -> s
+  | Some(v) -> s ^ str_var v in
+  s ^ str_bloc bloc
+
+let str_program p = match p with (defps, bloc) -> 
+  let s = List.fold_left (fun acc x -> acc ^ "\n" ^ str_defps x) "" defps in
+  "program\n" ^ s ^ "\n" ^ str_bloc bloc ^ ".\n"
