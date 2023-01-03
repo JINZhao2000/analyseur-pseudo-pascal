@@ -5,22 +5,24 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github JINZhao2000/analyseur-pseudo-pascal))
 
-(authors "Author Name")
+(authors "Zhao JIN")
 
-(maintainers "Maintainer Name")
+(maintainers "Zhao JIN")
 
-(license LICENSE)
+(license "Apache License 2.0")
 
-(documentation https://url/to/documentation)
+; (documentation https://url/to/documentation)
 
 (package
  (name pp)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
+ (synopsis "analyseur pseudo pascal")
+ (description "Projet : Analyseur syntaxique et semantique pour Pseudo-Pascal")
+ (depends ocaml dune ocamllex ocamlyacc menhir)
  (tags
-  (topics "to describe" your project)))
+  ("pascal" "analyser")))
+
+(using menhir 2.1)
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
