@@ -17,6 +17,12 @@ parse: build
 scope: build
 	@dune exec pp scope $(FILE)
 
+doc: 
+	@dune build @doc
+
+libdoc:
+	@dune build @doc-private
+
 clean:
 	@dune clean
 	@rm -f ./lib/parser.conflicts

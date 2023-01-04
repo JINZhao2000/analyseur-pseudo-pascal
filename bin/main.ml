@@ -1,5 +1,18 @@
 open Pp
 
+(**
+  @author Zhao JIN
+  @version 1.0
+  @since 1.0
+  @description
+  entry of program
+  <usage> : dune exec pp option <file>
+  <usage> : make option FILE=<file>
+  option:
+    lexer
+    token
+    parse
+    scope *)
 let _ = 
   if (Array.length Sys.argv < 3) then
     Printf.fprintf stdout "%s" "<usage> : dune exec pp option <file>\n<usage> : make option FILE=<file>\noption:\n lexer\n token\n parse\n scope\n"
