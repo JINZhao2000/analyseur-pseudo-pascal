@@ -1,23 +1,21 @@
 .DEFAULT_GOAL=build
 
+FILE =
+
 build:
 	@dune build
 
 lexer: build
-	@dune exec pp print ./OK/*
-	@dune exec pp print ./KO/*
+	@dune exec pp lexer $(FILE)
 
 token: build
-	@dune exec pp token ./OK/*
-	@dune exec pp token ./KO/*
+	@dune exec pp token $(FILE)
 
 parse: build
-	@dune exec pp parse ./OK/*
-	@dune exec pp parse ./KO/*
+	@dune exec pp parse $(FILE)
 
 scope: build
-	@dune exec pp scope ./OK/*
-	@dune exec pp scope ./KO/*
+	@dune exec pp scope $(FILE)
 
 clean:
 	@dune clean
@@ -29,7 +27,4 @@ conflict: build
 	@ocamlyacc -v ./lib/parser.mly
 	@rm -f ./lib/parser.mli
 	@rm -f ./lib/parser.ml
-
-sucnum:	build
-	@dune exec pp parse ./OK/* 2>/dev/null | grep Parse | wc -l
 
