@@ -100,10 +100,10 @@ let check_scope p =
       false
   end
 
-module IDMap = Map.Make(String)
+(* module IDMap = Map.Make(String)
 
 let is_type id t tbl = 
   let tt = IDMap.find_opt id tbl in
   match tt with
   | None -> false
-  | Some tt -> tt = t
+  | Some tt -> tt = t *)

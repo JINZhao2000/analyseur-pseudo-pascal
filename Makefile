@@ -21,6 +21,8 @@ scope: build
 
 clean:
 	@dune clean
+	@rm -f ./lib/parser.conflicts
+	@rm -f ./lib/parser.output
 
 conflict: build
 	@menhir --explain --unused-tokens ./lib/parser.mly
