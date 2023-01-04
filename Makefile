@@ -3,20 +3,21 @@
 build:
 	@dune build
 
-checkyacc:
-	menhir --explain --unused-tokens lib/parser.mly
-
-lexer:
+lexer: build
 	@dune exec pp print ./OK/*
 	@dune exec pp print ./KO/*
 
-token:
+token: build
 	@dune exec pp token ./OK/*
 	@dune exec pp token ./KO/*
 
-parse:
+parse: build
 	@dune exec pp parse ./OK/*
 	@dune exec pp parse ./KO/*
+
+scope: build
+	@dune exec pp scope ./OK/*
+	@dune exec pp scope ./KO/*
 
 clean:
 	@dune clean
@@ -26,4 +27,7 @@ conflict: build
 	@ocamlyacc -v ./lib/parser.mly
 	@rm -f ./lib/parser.mli
 	@rm -f ./lib/parser.ml
+
+sucnum:	build
+	@dune exec pp parse ./OK/* 2>/dev/null | grep Parse | wc -l
 

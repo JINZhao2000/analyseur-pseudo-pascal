@@ -32,7 +32,18 @@ let _ =
           let p = Parser.program Lexer.token lexbuf in
           Printf.fprintf stdout "%s\n" (Debug.str_program p)
         with
-          | Parsing.Parse_error -> Printf.fprintf stderr "Parse error\n"; close_in f
+          | Parsing.Parse_error -> Printf.fprintf stdout "Parse error\n"; close_in f
+      done
+    else if ("scope" = Sys.argv.(1)) then
+      for i = 2 to Array.length Sys.argv - 1 do
+        let f = open_in Sys.argv.(i) in
+        try
+          let lexbuf= Lexing.from_channel f in
+          let _ = Parsing.set_trace true in
+          let p = Parser.program Lexer.token lexbuf in
+          Printf.fprintf stdout "%s\n" @@ string_of_bool (Check.check_scope p)
+        with
+          | Parsing.Parse_error -> Printf.fprintf stdout "Parse error\n"; close_in f
       done
     else
       exit 0

@@ -8,6 +8,7 @@ type t =
 type var = 
   | VAR1 of (id * t) list
   | VAR2 of id list * t
+  | VAR3 of var * var
 
 type e = 
   | INT of int 
@@ -27,9 +28,11 @@ type e =
   | FCALL of id * e list
   | Tbl of e * e 
   | CTbl of t * e
+  | PE of e
 
 type cond = 
   | C of e
+  | PCOND of cond
   | NOT of cond
   | OR of cond * cond
   | AND of cond * cond
@@ -41,17 +44,20 @@ type instr =
   | IF of cond * instr * instr
   | WHILE of cond * instr
   | BLC of instr
+  | Nil
 
 type bloc = 
   | BLOC of instr list
 
 type deff = 
   | FUNC of id * var option * t * var option * bloc
-(*
+
 type defp = 
-  | PROC of id * env option * env option * bloc *)
+  | PROC of id * var option * var option * bloc
 
 type defprog = 
   | DEFV of var
   | DEFF of deff
-  (*| DEFP of defp *)
+  | DEFP of defp
+
+type program = defprog list * bloc

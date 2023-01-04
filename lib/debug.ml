@@ -129,22 +129,30 @@ let print_t lbuf =
   done
 
 
+let rec lstsep lst f acc sep = match lst with
+| [] -> acc
+| h::[] -> acc ^ f h
+| h::t -> lstsep t f (acc ^ f h ^ sep) sep
+
 let rec str_t t = match t with
 | INTT -> " integer "
 | BOOLT -> " boolean "
 | ARR t -> " array of" ^ str_t t
 
-let str_var v = match v with 
-| VAR1 vl -> List.fold_left (fun acc (id, t) -> acc ^ id ^ ":" ^ str_t t ^ ";") "var " vl
-| VAR2 (idl, t) -> List.fold_left (fun acc x -> acc ^  x ^ ",") "var " idl ^ " : " ^ str_t t
+let rec str_var v = match v with 
+| VAR1 vl -> lstsep vl (fun (id, t) -> id ^ ":" ^ str_t t) "var " "; "
+| VAR2 (idl, t) -> (lstsep idl (fun id -> id) "var " "; ") ^ ":" ^ str_t t
+| VAR3 (v1, v2) -> str_var v1 ^ ";\n" ^ str_var v2
 
-let str_var2 v = match v with 
-| VAR1 vl -> List.fold_left (fun acc (id, t) -> acc ^  id ^ ":" ^ str_t t ^ ";") "" vl
-| VAR2 (idl, t) -> List.fold_left (fun acc x -> acc ^ x ^ ",") "" idl ^ " : " ^ str_t t
+let rec str_var2 v = match v with 
+| VAR1 vl -> lstsep vl (fun (id, t) -> id ^ ":" ^ str_t t) "" "; "
+| VAR2 (idl, t) -> (lstsep idl (fun id -> id) "" "; ") ^ ":" ^ str_t t
+| VAR3 (v1, v2) -> str_var2 v1 ^ ";\n" ^ str_var2 v2
 
 let rec str_e e = match e with
-| INT i -> string_of_int i ^ " "
-| BOOL b -> string_of_bool b ^ " "
+| INT i -> string_of_int i 
+| BOOL b -> string_of_bool b
+| ID id -> id
 | NEG v -> " -" ^ str_e v
 | PLUS (v1, v2) -> str_e v1 ^ " + " ^ str_e v2
 | MINUS (v1, v2) -> str_e v1 ^ " - " ^ str_e v2
@@ -158,14 +166,29 @@ let rec str_e e = match e with
 | LT (v1, v2) -> str_e v1 ^ " < " ^ str_e v2
 | Tbl (v1, v2) -> str_e v1 ^ "[" ^ str_e v2 ^ "]"
 | CTbl (t, v) -> "new array of" ^ str_t t ^ "[" ^ str_e v ^ "]"
-| _ -> "not implemented"
+| PE e -> "(" ^ str_e e ^ ")"
+| FCALL (id, elst) -> id ^ "(" ^ (lstsep elst str_e "" ", ") ^ ")"
 
-let str_instr instr = match instr with 
+let rec str_cond cond = match cond with
+| C e -> str_e e
+| PCOND c -> "(" ^str_cond c ^ ")"
+| NOT c -> "not " ^ str_cond c
+| OR (c1, c2) -> str_cond c1 ^ " and " ^ str_cond c2
+| AND (c1, c2) -> str_cond c1 ^ " or " ^ str_cond c2
+
+let rec str_instr instr = match instr with 
 | AFF (id, e) -> id ^ " := " ^ str_e e
-| _ -> "not implemented"
+| PCALL (id, elst) -> id ^ "(" ^ (lstsep elst str_e "" ", ") ^ ")"
+| AFFT (e1, e2, e3) -> str_e e1 ^ "[" ^ str_e e2 ^ "] := " ^ str_e e3
+| IF (cond, instr1, instr2) -> "if " ^ str_cond cond ^ " then\n" 
+  ^ str_instr instr1 ^ "\nelse\n"^ str_instr instr2
+| BLC i -> "begin\n" ^ str_instr i ^ "end;"
+| WHILE (cond, instr) -> "while " ^ str_cond cond ^ " do\n" ^ str_instr instr
+| Nil -> ""
 
 let str_bloc b = match b with BLOC bl ->
-  "begin\n" ^ (List.fold_left (fun acc x -> acc ^ str_instr x ^ "\n") "" bl) ^ "\nend"
+  "begin\n" ^ (lstsep bl str_instr "" ";\n") ^ "\nend"
+  (* "begin\n" ^ (List.fold_left (fun acc x -> acc ^ str_instr x ^ "\n") "" bl) ^ "end" *)
 
 let str_defps defps = match defps with
 | DEFV v -> str_var v
@@ -173,10 +196,11 @@ let str_defps defps = match defps with
   let s = "function " ^ id ^ "(" in
   let s = match env with | None -> s
   | Some (e) -> s ^ str_var2 e in 
-  let s = s ^ "):" ^str_t t in
+  let s = s ^ "):" ^str_t t ^ "\n" in
   let s = match defv with | None -> s
   | Some(v) -> s ^ str_var v in
   s ^ str_bloc bloc
+| DEFP (_) -> "not implemented"
 
 let str_program p = match p with (defps, bloc) -> 
   let s = List.fold_left (fun acc x -> acc ^ "\n" ^ str_defps x) "" defps in
